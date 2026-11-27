@@ -50,8 +50,5 @@ class DatabaseSeeder extends Seeder
         foreach ($settings as $s) {
             Setting::updateOrCreate(['key' => $s['key']], $s);
         }
-
-        // 3. Dataset Jaringan Riil Kampus UBJ (tanpa metrik sintetis)
-        $this->call(UbjCampusDeviceSeeder::class);
     }
 }

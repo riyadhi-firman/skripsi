@@ -78,18 +78,17 @@ class CleanDummyDataCommand extends Command
             $this->line("  ✓ {$demoLogsCount} audit log berlabel demo dibersihkan.");
 
             if ($all) {
-                // Hapus topologi, antarmuka, dan perangkat
-                $edgesCount = TopologyEdge::count();
-                TopologyEdge::truncate();
-                $this->line("  ✓ {$edgesCount} link topologi dibersihkan.");
-
-                $ifacesCount = NetworkInterface::count();
-                NetworkInterface::truncate();
-                $this->line("  ✓ {$ifacesCount} network interfaces dibersihkan.");
-
+                // Hapus topologi, antarmuka, perangkat, alert, riwayat metrik, dan log
                 $devCount = Device::count();
-                Device::truncate();
-                $this->line("  ✓ {$devCount} perangkat dibersihkan.");
+                $edgesCount = TopologyEdge::count();
+                $ifacesCount = NetworkInterface::count();
+
+                DB::statement('TRUNCATE TABLE topology_edges, interface_metrics, interfaces, alert_histories, alerts, monitoring_results, devices, audit_logs RESTART IDENTITY CASCADE;');
+
+                $this->line("  ✓ {$edgesCount} link topologi dibersihkan.");
+                $this->line("  ✓ {$ifacesCount} network interfaces dibersihkan.");
+                $this->line("  ✓ {$devCount} perangkat dibersihkan total.");
+                $this->line("  ✓ Seluruh riwayat audit log dibersihkan.");
             } else {
                 // Reset telemetri perangkat ke nilai kosong (clean state)
                 $updatedDevs = Device::query()->update([
