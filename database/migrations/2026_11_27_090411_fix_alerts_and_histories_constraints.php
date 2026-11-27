@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE alerts ALTER COLUMN title DROP NOT NULL;');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE alerts ALTER COLUMN title DROP NOT NULL;');
+        }
 
         Schema::table('alert_histories', function (Blueprint $table) {
             if (!Schema::hasColumn('alert_histories', 'notes')) {
@@ -20,7 +22,9 @@ return new class extends Migration
             }
         });
 
-        DB::statement('ALTER TABLE alert_histories ALTER COLUMN description DROP NOT NULL;');
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE alert_histories ALTER COLUMN description DROP NOT NULL;');
+        }
     }
 
     /**

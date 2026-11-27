@@ -58,8 +58,8 @@ export const CustomNode = memo(({ data }: { data: CustomNodeData }) => {
             </div>
 
             <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-                <span>CPU: <strong className="font-mono text-slate-200">{device.cpu_usage !== null ? `${device.cpu_usage}%` : '-'}</strong></span>
-                <span>RAM: <strong className="font-mono text-slate-200">{device.memory_usage !== null ? `${device.memory_usage}%` : '-'}</strong></span>
+                <span>CPU: <strong className="font-mono text-slate-200">{device.cpu_usage !== null ? `${Number(device.cpu_usage).toFixed(1)}%` : '-'}</strong></span>
+                <span>RAM: <strong className="font-mono text-slate-200">{device.memory_usage !== null ? `${Number(device.memory_usage).toFixed(1)}%` : '-'}</strong></span>
             </div>
         </div>
     );

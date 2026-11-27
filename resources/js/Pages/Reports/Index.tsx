@@ -81,9 +81,10 @@ export default function ReportsIndex({
         );
     };
 
-    const handleExportCsv = () => {
+    const handleExportCsv = (type: 'raw' | 'sla' = 'raw') => {
         const params = new URLSearchParams();
         params.append('range', range);
+        params.append('type', type);
         if (deviceId) params.append('device_id', deviceId);
 
         window.location.href = `/reports/export-csv?${params.toString()}`;
@@ -107,11 +108,20 @@ export default function ReportsIndex({
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={handleExportCsv}
+                            onClick={() => handleExportCsv('sla')}
+                            className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-cyan-950/40 flex items-center gap-2 transition-all"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span>Export Rekap SLA</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleExportCsv('raw')}
                             className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-950/40 flex items-center gap-2 transition-all"
                         >
                             <Download className="w-4 h-4" />
-                            <span>Export Data CSV</span>
+                            <span>Export Telemetri Mentah</span>
                         </button>
                     </div>
                 </div>

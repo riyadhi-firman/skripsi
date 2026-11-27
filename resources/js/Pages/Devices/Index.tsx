@@ -274,11 +274,11 @@ export default function Index({ devices, filters, deviceTypes, vendors, location
                                             <td className="py-3.5 px-4">
                                                 <div className="flex items-center gap-2 font-mono">
                                                     <span className={`${(device.cpu_usage ?? 0) > 80 ? 'text-rose-400' : 'text-slate-300'}`}>
-                                                        CPU: {device.cpu_usage !== null ? `${device.cpu_usage}%` : '-'}
+                                                        CPU: {device.cpu_usage !== null ? `${Number(device.cpu_usage).toFixed(1)}%` : '-'}
                                                     </span>
                                                     <span className="text-slate-600">|</span>
                                                     <span className={`${(device.memory_usage ?? 0) > 85 ? 'text-rose-400' : 'text-slate-300'}`}>
-                                                        RAM: {device.memory_usage !== null ? `${device.memory_usage}%` : '-'}
+                                                        RAM: {device.memory_usage !== null ? `${Number(device.memory_usage).toFixed(1)}%` : '-'}
                                                     </span>
                                                 </div>
                                             </td>

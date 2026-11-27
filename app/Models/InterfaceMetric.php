@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InterfaceMetric extends Model
 {
-    use HasFactory;
+    use HasFactory, MassPrunable;
 
     public $timestamps = false;
 
@@ -41,5 +43,18 @@ class InterfaceMetric extends Model
     public function networkInterface(): BelongsTo
     {
         return $this->belongsTo(NetworkInterface::class, 'interface_id');
+    }
+
+    /**
+     * Get the prunable model query.
+     */
+    public function prunable(): Builder
+    {
+        $days = (int) Setting::get('data_retention_days', 14);
+        return static::where('recorded_at', '<=', now()->subDays($days))
+            ->orWhere(function ($query) use ($days) {
+                $query->whereNull('recorded_at')
+                    ->where('created_at', '<=', now()->subDays($days));
+            });
     }
 }

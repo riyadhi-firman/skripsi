@@ -97,14 +97,68 @@ class ReportController extends Controller
     }
 
     /**
-     * Export monitoring records to CSV for academic thesis documentation.
+     * Export monitoring records or SLA summary to CSV for academic thesis documentation.
      */
     public function exportCsv(Request $request): StreamedResponse
     {
         $days = (int) $request->input('range', 7);
         $since = now()->subDays($days);
         $deviceId = $request->input('device_id');
+        $type = $request->input('type', 'raw');
 
+        if ($type === 'sla') {
+            $filename = 'rekap-sla-perangkat-ubj-' . now()->format('Y-m-d_His') . '.csv';
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            return response()->stream(function () use ($since) {
+                $handle = fopen('php://output', 'w');
+                // UTF-8 BOM for Excel
+                fputs($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'Device ID',
+                    'Nama Perangkat',
+                    'Alamat IP',
+                    'Tipe Perangkat',
+                    'Status',
+                    'Total Pengecekan',
+                    'Uptime (%)',
+                    'Rata-rata RTT Latensi (ms)',
+                    'Rata-rata Packet Loss (%)',
+                    'Suhu Terkini (°C)',
+                ]);
+
+                $devices = Device::all();
+                foreach ($devices as $d) {
+                    $q = MonitoringResult::where('device_id', $d->id)->where('checked_at', '>=', $since);
+                    $total = $q->count();
+                    $up = (clone $q)->where('status', 'UP')->count();
+                    $uptimePct = $total > 0 ? round(($up / $total) * 100, 2) : 100.0;
+                    $avgLat = round((float) (clone $q)->avg('latency'), 2);
+                    $avgLoss = round((float) (clone $q)->avg('packet_loss'), 2);
+
+                    fputcsv($handle, [
+                        $d->id,
+                        $d->name,
+                        $d->ip_address,
+                        $d->device_type,
+                        $d->status,
+                        $total,
+                        $uptimePct,
+                        $avgLat,
+                        $avgLoss,
+                        $d->temperature !== null ? $d->temperature : '-',
+                    ]);
+                }
+
+                fclose($handle);
+            }, 200, $headers);
+        }
+
+        // Default: Raw telemetry dataset
         $query = MonitoringResult::with('device')
             ->where('checked_at', '>=', $since)
             ->orderBy('checked_at', 'desc');
@@ -113,15 +167,17 @@ class ReportController extends Controller
             $query->where('device_id', $deviceId);
         }
 
-        $filename = 'laporan-monitoring-ubj-'.now()->format('Y-m-d_His').'.csv';
+        $filename = 'laporan-telemetri-monitoring-ubj-' . now()->format('Y-m-d_His') . '.csv';
 
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
         return response()->stream(function () use ($query) {
             $handle = fopen('php://output', 'w');
+            // UTF-8 BOM for Excel
+            fputs($handle, "\xEF\xBB\xBF");
 
             // Header Row
             fputcsv($handle, [
@@ -132,9 +188,9 @@ class ReportController extends Controller
                 'Status',
                 'Latency (ms)',
                 'Packet Loss (%)',
-                'Jitter (ms)',
                 'CPU Usage (%)',
                 'Memory Usage (%)',
+                'Temperature (°C)',
                 'Uptime (seconds)',
                 'Checked At',
             ]);
@@ -149,11 +205,11 @@ class ReportController extends Controller
                         $row->status,
                         $row->latency,
                         $row->packet_loss,
-                        $row->jitter,
                         $row->cpu_usage,
                         $row->memory_usage,
+                        $row->temperature,
                         $row->uptime,
-                        $row->checked_at->toDateTimeString(),
+                        $row->checked_at?->toDateTimeString() ?? $row->created_at?->toDateTimeString() ?? '',
                     ]);
                 }
             });

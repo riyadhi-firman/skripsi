@@ -13,6 +13,8 @@ import {
     Check,
     AlertCircle,
     RotateCcw,
+    Thermometer,
+    Send,
 } from 'lucide-react';
 
 interface SettingItem {
@@ -37,9 +39,22 @@ export default function SettingsIndex({ settings: initialSettings }: Props) {
     });
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isTestingTelegram, setIsTestingTelegram] = useState(false);
 
     const handleChange = (key: string, value: string) => {
         setSettings((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const handleTestTelegram = () => {
+        setIsTestingTelegram(true);
+        router.post(
+            '/settings/test-telegram',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setIsTestingTelegram(false),
+            }
+        );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -251,10 +266,120 @@ export default function SettingsIndex({ settings: initialSettings }: Props) {
                                 Alarm memori kritis perangkat (default: 95%)
                             </span>
                         </div>
+
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium flex items-center gap-1">
+                                <Thermometer className="w-3.5 h-3.5 text-amber-400" />
+                                <span>Temperature Warning Threshold (°C)</span>
+                            </label>
+                            <input
+                                type="number"
+                                value={settings['temperature_warning_c'] || ''}
+                                onChange={(e) => handleChange('temperature_warning_c', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                                min="20"
+                                max="120"
+                                required
+                            />
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                Peringatan jika suhu router mencapai batas ini (default: 70°C)
+                            </span>
+                        </div>
+
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium flex items-center gap-1">
+                                <Thermometer className="w-3.5 h-3.5 text-rose-400" />
+                                <span>Temperature Critical Threshold (°C)</span>
+                            </label>
+                            <input
+                                type="number"
+                                value={settings['temperature_critical_c'] || ''}
+                                onChange={(e) => handleChange('temperature_critical_c', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                                min="20"
+                                max="120"
+                                required
+                            />
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                Alarm kritis jika suhu router terancam overheat (default: 75°C)
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Section 3: Monitoring Engine Token & Polling Schedule */}
+                {/* Section 3: Telegram Notification Bot */}
+                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                            <Send className="w-4 h-4 text-cyan-400" />
+                            <h2 className="text-sm font-bold text-slate-100">
+                                Notifikasi Otomatis Bot Telegram
+                            </h2>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleTestTelegram}
+                            disabled={isTestingTelegram}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-medium transition disabled:opacity-50"
+                        >
+                            <Send className="w-3 h-3" />
+                            <span>{isTestingTelegram ? 'Mengirim...' : 'Uji Coba Kirim Pesan'}</span>
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium">
+                                Status Integrasi Telegram
+                            </label>
+                            <select
+                                value={settings['telegram_enabled'] || 'false'}
+                                onChange={(e) => handleChange('telegram_enabled', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500"
+                            >
+                                <option value="true">Aktif (Enabled)</option>
+                                <option value="false">Nonaktif (Disabled)</option>
+                            </select>
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                Mengirim alert langsung ke grup/channel NOC saat insiden terdeteksi
+                            </span>
+                        </div>
+
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium">
+                                Telegram Bot Token
+                            </label>
+                            <input
+                                type="password"
+                                value={settings['telegram_bot_token'] || ''}
+                                onChange={(e) => handleChange('telegram_bot_token', e.target.value)}
+                                placeholder="123456789:ABCdefGHIjklMNOpqrs"
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                            />
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                Dibuat melalui @BotFather di aplikasi Telegram
+                            </span>
+                        </div>
+
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium">
+                                Telegram Chat / Group ID
+                            </label>
+                            <input
+                                type="text"
+                                value={settings['telegram_chat_id'] || ''}
+                                onChange={(e) => handleChange('telegram_chat_id', e.target.value)}
+                                placeholder="-1001234567890 atau user ID"
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                            />
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                ID grup/channel (gunakan @userinfobot atau @getidsbot)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section 4: Monitoring Engine Token & Polling Schedule */}
                 <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
                     <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
                         <KeyRound className="w-4 h-4 text-cyan-400" />
@@ -263,7 +388,7 @@ export default function SettingsIndex({ settings: initialSettings }: Props) {
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                         <div>
                             <label className="block text-slate-300 mb-1 font-medium">
                                 Monitoring Ingestion API Token
@@ -294,6 +419,24 @@ export default function SettingsIndex({ settings: initialSettings }: Props) {
                             />
                             <span className="text-[11px] text-slate-500 mt-1 block">
                                 Siklus default pengulangan polling per perangkat (default: 30 detik)
+                            </span>
+                        </div>
+
+                        <div>
+                            <label className="block text-slate-300 mb-1 font-medium">
+                                Retensi Data Histori (Hari)
+                            </label>
+                            <input
+                                type="number"
+                                value={settings['data_retention_days'] || '14'}
+                                onChange={(e) => handleChange('data_retention_days', e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                                min="1"
+                                max="365"
+                                required
+                            />
+                            <span className="text-[11px] text-slate-500 mt-1 block">
+                                Data metriks lebih lama dari ini akan dibersihkan otomatis (pruned)
                             </span>
                         </div>
                     </div>

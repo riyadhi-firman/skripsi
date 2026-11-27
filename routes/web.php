@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings', [\App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
+        Route::post('/settings/test-telegram', [\App\Http\Controllers\SettingController::class, 'testTelegram'])->name('settings.test-telegram');
 
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
     });

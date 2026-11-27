@@ -139,6 +139,7 @@ class MonitoringIngestionController extends Controller
                 'packet_loss' => $valid['packet_loss'] ?? null,
                 'cpu_usage' => $valid['cpu_usage'] ?? null,
                 'memory_usage' => $valid['memory_usage'] ?? null,
+                'temperature' => $valid['temperature'] ?? null,
             ]);
 
             // 4. Broadcast Real-Time Reverb event

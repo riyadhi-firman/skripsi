@@ -7,6 +7,8 @@ use App\Models\Alert;
 use App\Models\AlertHistory;
 use App\Models\Device;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AlertService
 {
@@ -15,10 +17,15 @@ class AlertService
      */
     public function evaluateDevice(Device $device, array $metrics): void
     {
-        $latencyWarn = (float) Setting::get('alert_latency_warn_ms', 150.0);
-        $lossWarn = (float) Setting::get('alert_packet_loss_warn_pct', 10.0);
-        $cpuWarn = (float) Setting::get('alert_cpu_warn_pct', 85.0);
-        $memWarn = (float) Setting::get('alert_mem_warn_pct', 90.0);
+        $latencyWarn = (float) (Setting::get('latency_warning_ms') ?? Setting::get('alert_latency_warn_ms', 100.0));
+        $lossWarn = (float) (Setting::get('packet_loss_warning_pct') ?? Setting::get('alert_packet_loss_warn_pct', 10.0));
+        $lossCrit = (float) (Setting::get('packet_loss_critical_pct', 20.0));
+        $cpuWarn = (float) (Setting::get('cpu_warning_pct') ?? Setting::get('alert_cpu_warn_pct', 80.0));
+        $cpuCrit = (float) (Setting::get('cpu_critical_pct', 90.0));
+        $memWarn = (float) (Setting::get('memory_warning_pct') ?? Setting::get('alert_mem_warn_pct', 85.0));
+        $memCrit = (float) (Setting::get('memory_critical_pct', 95.0));
+        $tempWarn = (float) (Setting::get('temperature_warning_c', 70.0));
+        $tempCrit = (float) (Setting::get('temperature_critical_c', 75.0));
 
         // 1. Device UP / DOWN state
         if ($device->status === 'DOWN') {
@@ -52,7 +59,7 @@ class AlertService
         if (isset($metrics['packet_loss']) && $metrics['packet_loss'] !== null) {
             $loss = (float) $metrics['packet_loss'];
             if ($loss >= $lossWarn && $device->status !== 'DOWN') {
-                $sev = $loss >= 50.0 ? 'CRITICAL' : 'WARNING';
+                $sev = $loss >= $lossCrit ? 'CRITICAL' : 'WARNING';
                 $this->triggerAlert(
                     $device,
                     'PACKET_LOSS',
@@ -68,10 +75,11 @@ class AlertService
         if (isset($metrics['cpu_usage']) && $metrics['cpu_usage'] !== null) {
             $cpu = (float) $metrics['cpu_usage'];
             if ($cpu >= $cpuWarn) {
+                $sev = $cpu >= $cpuCrit ? 'CRITICAL' : 'WARNING';
                 $this->triggerAlert(
                     $device,
                     'HIGH_CPU',
-                    'WARNING',
+                    $sev,
                     "Beban CPU tinggi pada {$device->name}: {$cpu}% (Ambang batas: {$cpuWarn}%)."
                 );
             } else {
@@ -83,14 +91,37 @@ class AlertService
         if (isset($metrics['memory_usage']) && $metrics['memory_usage'] !== null) {
             $mem = (float) $metrics['memory_usage'];
             if ($mem >= $memWarn) {
+                $sev = $mem >= $memCrit ? 'CRITICAL' : 'WARNING';
                 $this->triggerAlert(
                     $device,
                     'HIGH_MEMORY',
-                    'WARNING',
+                    $sev,
                     "Penggunaan RAM tinggi pada {$device->name}: {$mem}% (Ambang batas: {$memWarn}%)."
                 );
             } else {
                 $this->autoResolveAlert($device, 'HIGH_MEMORY', "Penggunaan RAM {$device->name} normal ({$mem}%).");
+            }
+        }
+
+        // 6. Temperature check
+        if (isset($metrics['temperature']) && $metrics['temperature'] !== null) {
+            $temp = (float) $metrics['temperature'];
+            if ($temp >= $tempCrit) {
+                $this->triggerAlert(
+                    $device,
+                    'HIGH_TEMPERATURE',
+                    'CRITICAL',
+                    "Suhu router {$device->name} kritis: {$temp}°C (Batas bahaya: {$tempCrit}°C)."
+                );
+            } elseif ($temp >= $tempWarn) {
+                $this->triggerAlert(
+                    $device,
+                    'HIGH_TEMPERATURE',
+                    'WARNING',
+                    "Suhu router {$device->name} tinggi: {$temp}°C (Ambang batas: {$tempWarn}°C)."
+                );
+            } else {
+                $this->autoResolveAlert($device, 'HIGH_TEMPERATURE', "Suhu router {$device->name} kembali normal ({$temp}°C).");
             }
         }
     }
@@ -122,6 +153,7 @@ class AlertService
             'PACKET_LOSS' => "Packet Loss Tinggi pada {$device->name}",
             'HIGH_CPU' => "Beban CPU Tinggi pada {$device->name}",
             'HIGH_MEMORY' => "Penggunaan Memori Tinggi pada {$device->name}",
+            'HIGH_TEMPERATURE' => "Suhu Tinggi / Overheat pada {$device->name}",
             default => "Peringatan {$type} pada {$device->name}",
         };
 
@@ -150,6 +182,16 @@ class AlertService
             // Fail silently if reverb is offline during polling
         }
 
+        // Send Telegram Notification
+        $icon = $severity === 'CRITICAL' ? '🚨' : '⚠️';
+        $telegramMsg = "{$icon} <b>UBJ NETPULSE - NOC ALERT</b>\n"
+            . "<b>Perangkat:</b> {$device->name} ({$device->ip_address})\n"
+            . "<b>Severity:</b> [{$severity}]\n"
+            . "<b>Tipe:</b> {$type}\n"
+            . "<b>Pesan:</b> {$message}\n"
+            . "<b>Waktu:</b> " . now()->format('Y-m-d H:i:s') . " WIB";
+        $this->sendTelegram($telegramMsg);
+
         return $alert;
     }
 
@@ -175,6 +217,43 @@ class AlertService
                 'action' => 'RESOLVED',
                 'notes' => $notes,
             ]);
+
+            // Send Telegram Recovery Notification
+            $telegramMsg = "✅ <b>UBJ NETPULSE - NOC RECOVERY</b>\n"
+                . "<b>Perangkat:</b> {$device->name} ({$device->ip_address})\n"
+                . "<b>Status:</b> RESOLVED ({$type})\n"
+                . "<b>Keterangan:</b> {$notes}\n"
+                . "<b>Waktu:</b> " . now()->format('Y-m-d H:i:s') . " WIB";
+            $this->sendTelegram($telegramMsg);
+        }
+    }
+
+    /**
+     * Send instant message to Telegram Bot channel/group.
+     */
+    public function sendTelegram(string $message): void
+    {
+        $enabled = Setting::get('telegram_enabled', 'false');
+        if (! in_array(strtolower((string) $enabled), ['true', '1', 'yes', 'on'], true)) {
+            return;
+        }
+
+        $botToken = Setting::get('telegram_bot_token');
+        $chatId = Setting::get('telegram_chat_id');
+
+        if (empty($botToken) || empty($chatId)) {
+            return;
+        }
+
+        try {
+            Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('[TelegramBot] Gagal mengirim pesan notifikasi: ' . $e->getMessage());
         }
     }
 }
