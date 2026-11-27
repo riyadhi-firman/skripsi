@@ -40,6 +40,19 @@ class TopologyController extends Controller
      */
     public function updatePosition(Request $request): JsonResponse
     {
+        if ($request->has('nodes') && is_array($request->input('nodes'))) {
+            foreach ($request->input('nodes') as $n) {
+                if (isset($n['device_id'], $n['pos_x'], $n['pos_y'])) {
+                    Device::where('id', $n['device_id'])->update([
+                        'pos_x' => (int) $n['pos_x'],
+                        'pos_y' => (int) $n['pos_y'],
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true]);
+        }
+
         $request->validate([
             'device_id' => 'required|exists:devices,id',
             'pos_x' => 'required|numeric',
@@ -48,8 +61,8 @@ class TopologyController extends Controller
 
         $device = Device::findOrFail($request->input('device_id'));
         $device->update([
-            'pos_x' => $request->input('pos_x'),
-            'pos_y' => $request->input('pos_y'),
+            'pos_x' => (int) $request->input('pos_x'),
+            'pos_y' => (int) $request->input('pos_y'),
         ]);
 
         return response()->json([

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { router, Link } from '@inertiajs/react';
+import axios from 'axios';
 import ReactFlow, {
     Node,
     Edge,
@@ -202,18 +203,21 @@ export default function TopologyIndex({
         const deviceId = parseInt(node.id, 10);
         const { x, y } = node.position;
 
-        router.post(
-            '/topology/nodes/position',
-            {
-                device_id: deviceId,
-                pos_x: Math.round(x),
-                pos_y: Math.round(y),
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-            }
+        setDevices((prev) =>
+            prev.map((d) =>
+                d.id === deviceId
+                    ? { ...d, pos_x: Math.round(x), pos_y: Math.round(y) }
+                    : d
+            )
         );
+
+        axios.post('/topology/nodes/position', {
+            device_id: deviceId,
+            pos_x: Math.round(x),
+            pos_y: Math.round(y),
+        }).catch((err) => {
+            console.error('Gagal menyimpan posisi node:', err);
+        });
     }, []);
 
     // Auto-organize hierarchical layout
@@ -255,21 +259,28 @@ export default function TopologyIndex({
                             onSelect: (d: Device) => setSelectedDevice(d),
                         },
                     });
-
-                    // Save position
-                    router.post(
-                        '/topology/nodes/position',
-                        {
-                            device_id: dev.id,
-                            pos_x: posX,
-                            pos_y: tierY,
-                        },
-                        { preserveScroll: true, preserveState: true }
-                    );
                 });
             });
 
         setNodes(newNodes);
+        setDevices((prev) =>
+            prev.map((d) => {
+                const found = newNodes.find((n) => n.id === String(d.id));
+                return found
+                    ? { ...d, pos_x: Math.round(found.position.x), pos_y: Math.round(found.position.y) }
+                    : d;
+            })
+        );
+
+        const payload = newNodes.map((n) => ({
+            device_id: parseInt(n.id, 10),
+            pos_x: Math.round(n.position.x),
+            pos_y: Math.round(n.position.y),
+        }));
+
+        axios.post('/topology/nodes/position', { nodes: payload }).catch((err) => {
+            console.error('Gagal menyimpan posisi auto-layout:', err);
+        });
     };
 
     const handleCreateLink = (e: React.FormEvent) => {
