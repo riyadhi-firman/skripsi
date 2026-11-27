@@ -179,39 +179,50 @@ class MonitoringIngestionController extends Controller
             $ifIndex = $ifaceData['if_index'] ?? null;
             if ($ifIndex === null) continue;
 
+            $name = $ifaceData['name'] ?? $ifaceData['if_name'] ?? "eth{$ifIndex}";
+            $description = $ifaceData['description'] ?? $ifaceData['if_descr'] ?? null;
+            $adminStatus = $ifaceData['admin_status'] ?? $ifaceData['if_admin_status'] ?? 'UP';
+            $operStatus = $ifaceData['oper_status'] ?? $ifaceData['if_oper_status'] ?? 'UP';
+            $speed = (int) ($ifaceData['speed'] ?? $ifaceData['if_speed'] ?? 1000000000);
+            $inOctets = (int) ($ifaceData['in_octets'] ?? $ifaceData['if_in_octets'] ?? 0);
+            $outOctets = (int) ($ifaceData['out_octets'] ?? $ifaceData['if_out_octets'] ?? 0);
+            $inErrors = (int) ($ifaceData['in_errors'] ?? $ifaceData['if_in_errors'] ?? 0);
+            $outErrors = (int) ($ifaceData['out_errors'] ?? $ifaceData['if_out_errors'] ?? 0);
+
             $iface = NetworkInterface::updateOrCreate(
                 [
                     'device_id' => $device->id,
                     'if_index' => $ifIndex,
                 ],
                 [
-                    'if_name' => $ifaceData['if_name'] ?? "eth{$ifIndex}",
-                    'if_descr' => $ifaceData['if_descr'] ?? null,
-                    'if_type' => $ifaceData['if_type'] ?? null,
-                    'if_speed' => $ifaceData['if_speed'] ?? 1000000000,
-                    'if_phys_address' => $ifaceData['if_phys_address'] ?? null,
-                    'if_admin_status' => $ifaceData['if_admin_status'] ?? 'UP',
-                    'if_oper_status' => $ifaceData['if_oper_status'] ?? 'UP',
-                    'if_in_octets' => $ifaceData['if_in_octets'] ?? 0,
-                    'if_out_octets' => $ifaceData['if_out_octets'] ?? 0,
-                    'if_in_errors' => $ifaceData['if_in_errors'] ?? 0,
-                    'if_out_errors' => $ifaceData['if_out_errors'] ?? 0,
-                    'in_utilization' => $ifaceData['in_utilization'] ?? 0.0,
-                    'out_utilization' => $ifaceData['out_utilization'] ?? 0.0,
-                    'last_polled_at' => $now,
+                    'name' => $name,
+                    'description' => $description,
+                    'admin_status' => $adminStatus,
+                    'oper_status' => $operStatus,
+                    'speed' => $speed,
+                    'in_octets' => $inOctets,
+                    'out_octets' => $outOctets,
+                    'in_errors' => $inErrors,
+                    'out_errors' => $outErrors,
                 ]
             );
 
             // Record interface metric sample
+            $inputOctets = (int) ($ifaceData['input_octets'] ?? $ifaceData['in_octets_rate'] ?? $inOctets);
+            $outputOctets = (int) ($ifaceData['output_octets'] ?? $ifaceData['out_octets_rate'] ?? $outOctets);
+            $inputErrors = (int) ($ifaceData['input_errors'] ?? $inErrors);
+            $outputErrors = (int) ($ifaceData['output_errors'] ?? $outErrors);
+            $utilization = (float) ($ifaceData['utilization'] ?? max((float) ($ifaceData['in_utilization'] ?? 0), (float) ($ifaceData['out_utilization'] ?? 0)));
+
             InterfaceMetric::create([
                 'interface_id' => $iface->id,
-                'in_octets_rate' => $ifaceData['in_octets_rate'] ?? 0,
-                'out_octets_rate' => $ifaceData['out_octets_rate'] ?? 0,
-                'in_utilization' => $ifaceData['in_utilization'] ?? 0.0,
-                'out_utilization' => $ifaceData['out_utilization'] ?? 0.0,
-                'in_errors' => $ifaceData['if_in_errors'] ?? 0,
-                'out_errors' => $ifaceData['if_out_errors'] ?? 0,
+                'input_octets' => $inputOctets,
+                'output_octets' => $outputOctets,
+                'input_errors' => $inputErrors,
+                'output_errors' => $outputErrors,
+                'utilization' => $utilization,
                 'recorded_at' => $now,
+                'created_at' => $now,
             ]);
 
             $processed++;

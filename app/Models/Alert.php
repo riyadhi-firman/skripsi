@@ -40,6 +40,20 @@ class Alert extends Model
         ];
     }
 
+    public function setAlertTypeAttribute($value): void
+    {
+        $this->attributes['alert_type'] = $value;
+        $this->attributes['type'] = $value;
+    }
+
+    public function setTypeAttribute($value): void
+    {
+        $this->attributes['type'] = $value;
+        if (! isset($this->attributes['alert_type'])) {
+            $this->attributes['alert_type'] = $value;
+        }
+    }
+
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class, 'device_id');
