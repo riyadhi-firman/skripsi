@@ -1,0 +1,18 @@
+[Unit]
+Description=UBJ Network Monitoring System - Golang Polling Engine Daemon
+After=network.target ubj-nms-web.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/NMS/monitoring-engine
+ExecStart=/var/www/NMS/monitoring-engine/ubj-nms-engine
+Restart=always
+RestartSec=5
+Environment="API_URL=http://127.0.0.1:8000"
+Environment="API_TOKEN=ubj_nms_engine_secret_token_2026"
+Environment="WORKER_POOL_SIZE=20"
+Environment="POLL_INTERVAL_SEC=30"
+
+[Install]
+WantedBy=multi-user.target
