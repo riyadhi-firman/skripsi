@@ -79,14 +79,21 @@ export interface TopologyEdge {
     target_device_id: number;
     source_interface_id?: number | null;
     target_interface_id?: number | null;
-    link_type: string;
-    link_speed: number;
-    status: 'ACTIVE' | 'INACTIVE';
+    label?: string | null;
+    bandwidth?: string | null;
+    link_type?: string;
+    link_speed?: number;
+    speed_mbps?: number;
+    source_port?: string;
+    target_port?: string;
+    status: 'ACTIVE' | 'INACTIVE' | 'UP' | 'DOWN' | string;
     source_device?: Device;
     target_device?: Device;
     source_interface?: NetworkInterface;
     target_interface?: NetworkInterface;
 }
+
+export type TopologyLink = TopologyEdge;
 
 export interface MonitoringResult {
     id: number;

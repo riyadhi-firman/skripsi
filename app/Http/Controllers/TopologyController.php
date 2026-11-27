@@ -30,6 +30,7 @@ class TopologyController extends Controller
         return Inertia::render('Topology/Index', [
             'devices' => $devices,
             'edges' => $edges,
+            'links' => $edges,
             'canManage' => $request->user()?->isAdmin() ?? false,
         ]);
     }
@@ -73,11 +74,37 @@ class TopologyController extends Controller
             'target_device_id' => 'required|exists:devices,id|different:source_device_id',
             'source_interface_id' => 'nullable|exists:interfaces,id',
             'target_interface_id' => 'nullable|exists:interfaces,id',
-            'link_type' => 'required|string|max:50',
-            'link_speed' => 'required|integer|min:1',
+            'source_port' => 'nullable|string|max:50',
+            'target_port' => 'nullable|string|max:50',
+            'link_type' => 'nullable|string|max:50',
+            'speed_mbps' => 'nullable|integer|min:1',
+            'link_speed' => 'nullable|integer|min:1',
+            'label' => 'nullable|string|max:100',
+            'bandwidth' => 'nullable|string|max:50',
         ]);
 
-        $edge = TopologyEdge::create($validated);
+        $speed = $request->input('speed_mbps') ?? $request->input('link_speed');
+        $bandwidth = $request->input('bandwidth');
+        if (! $bandwidth && $speed) {
+            $bandwidth = $speed >= 1000 ? ($speed / 1000) . ' Gbps' : $speed . ' Mbps';
+        }
+        $label = $request->input('label');
+        if (! $label) {
+            $srcPort = $request->input('source_port', 'eth0');
+            $tgtPort = $request->input('target_port', 'eth0');
+            $bw = $bandwidth ?: '1 Gbps';
+            $label = "{$bw} ({$srcPort} → {$tgtPort})";
+        }
+
+        $edge = TopologyEdge::create([
+            'source_device_id' => $validated['source_device_id'],
+            'target_device_id' => $validated['target_device_id'],
+            'source_interface_id' => $validated['source_interface_id'] ?? null,
+            'target_interface_id' => $validated['target_interface_id'] ?? null,
+            'label' => $label,
+            'status' => 'UP',
+            'bandwidth' => $bandwidth ?? '1 Gbps',
+        ]);
 
         AuditLog::create([
             'user_id' => $request->user()->id,

@@ -34,13 +34,21 @@ import {
 } from 'lucide-react';
 
 interface Props {
-    devices: Device[];
-    links: TopologyLink[];
+    devices?: Device[];
+    links?: TopologyLink[];
+    edges?: TopologyLink[];
+    canManage?: boolean;
 }
 
-export default function TopologyIndex({ devices: initialDevices, links: initialLinks }: Props) {
+export default function TopologyIndex({
+    devices: initialDevices = [],
+    links: initialLinks,
+    edges: initialEdgesProp,
+    canManage = false,
+}: Props) {
+    const rawLinks = initialLinks ?? initialEdgesProp ?? [];
     const [devices, setDevices] = useState<Device[]>(initialDevices);
-    const [links, setLinks] = useState<TopologyLink[]>(initialLinks);
+    const [links, setLinks] = useState<TopologyLink[]>(rawLinks);
     const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
     const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
 
@@ -58,7 +66,7 @@ export default function TopologyIndex({ devices: initialDevices, links: initialL
 
     // Create ReactFlow Nodes
     const initialNodes: Node[] = useMemo(() => {
-        return devices.map((d, idx) => ({
+        return (devices || []).map((d, idx) => ({
             id: String(d.id),
             type: 'device',
             position: {
@@ -74,18 +82,29 @@ export default function TopologyIndex({ devices: initialDevices, links: initialL
 
     // Create ReactFlow Edges
     const initialEdges: Edge[] = useMemo(() => {
-        return links.map((l) => {
+        return (links || []).map((l) => {
             const isDown =
                 l.status === 'DOWN' ||
                 l.source_device?.status === 'DOWN' ||
                 l.target_device?.status === 'DOWN';
+
+            let edgeLabel = l.label || l.bandwidth || '';
+            if (!edgeLabel && l.speed_mbps) {
+                edgeLabel = l.speed_mbps >= 1000 ? `${l.speed_mbps / 1000}G` : `${l.speed_mbps}M`;
+            }
+            if (l.source_port && l.target_port && !l.label) {
+                edgeLabel = edgeLabel ? `${edgeLabel} (${l.source_port} → ${l.target_port})` : `${l.source_port} → ${l.target_port}`;
+            }
+            if (!edgeLabel) {
+                edgeLabel = 'Link';
+            }
 
             return {
                 id: String(l.id),
                 source: String(l.source_device_id),
                 target: String(l.target_device_id),
                 animated: !isDown,
-                label: `${l.speed_mbps >= 1000 ? `${l.speed_mbps / 1000}G` : `${l.speed_mbps}M`} (${l.source_port} → ${l.target_port})`,
+                label: edgeLabel,
                 labelStyle: { fill: '#94a3b8', fontSize: 10, fontFamily: 'monospace' },
                 labelBgStyle: { fill: '#0f172a', fillOpacity: 0.9, rx: 4, ry: 4 },
                 labelBgPadding: [4, 2] as [number, number],
@@ -106,6 +125,14 @@ export default function TopologyIndex({ devices: initialDevices, links: initialL
 
     const [nodes, setNodes] = useState<Node[]>(initialNodes);
     const [edges, setEdges] = useState<Edge[]>(initialEdges);
+
+    useEffect(() => {
+        setDevices(initialDevices);
+    }, [initialDevices]);
+
+    useEffect(() => {
+        setLinks(initialLinks ?? initialEdgesProp ?? []);
+    }, [initialLinks, initialEdgesProp]);
 
     useEffect(() => {
         setNodes(initialNodes);
