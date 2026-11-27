@@ -52,9 +52,9 @@ class Device extends Model
         'last_seen',
     ];
 
-    public function getLastSeenAttribute(): ?string
+    public function getLastSeenAttribute(): ?\Carbon\Carbon
     {
-        return $this->last_checked_at?->toIso8601String();
+        return $this->last_checked_at;
     }
 
     protected function casts(): array

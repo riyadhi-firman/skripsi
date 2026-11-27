@@ -32,7 +32,7 @@ class DeviceStatusUpdated implements ShouldBroadcastNow
             'memory_usage' => $device->memory_usage,
             'temperature' => $device->temperature,
             'uptime' => $device->uptime,
-            'last_seen' => $device->last_seen?->toIso8601String(),
+            'last_seen' => $device->last_checked_at?->toIso8601String() ?? ($device->last_seen instanceof \DateTimeInterface ? $device->last_seen->toIso8601String() : $device->last_seen),
             'pos_x' => $device->pos_x,
             'pos_y' => $device->pos_y,
         ];
