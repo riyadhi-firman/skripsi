@@ -47,6 +47,15 @@ class Device extends Model
         'snmp_priv_password',
     ];
 
+    protected $appends = [
+        'last_seen',
+    ];
+
+    public function getLastSeenAttribute(): ?string
+    {
+        return $this->last_checked_at?->toIso8601String();
+    }
+
     protected function casts(): array
     {
         return [

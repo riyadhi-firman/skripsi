@@ -224,7 +224,7 @@ export default function Show({ device, monitoringHistory, canManage }: Props) {
                             <Thermometer className="w-4 h-4 text-amber-400" />
                         </div>
                         <div className="mt-2 text-base font-bold font-mono text-slate-100">
-                            {device.temperature !== null ? `${device.temperature} °C` : 'N/A'}
+                            {device.temperature != null ? `${device.temperature} °C` : 'N/A'}
                         </div>
                         <div className="text-[10px] text-slate-500 mt-1">
                             Sensor Thermal
@@ -250,8 +250,8 @@ export default function Show({ device, monitoringHistory, canManage }: Props) {
                             <Activity className="w-4 h-4 text-purple-400" />
                         </div>
                         <div className="mt-2 text-xs font-semibold text-slate-200">
-                            {device.last_seen
-                                ? new Date(device.last_seen).toLocaleTimeString('id-ID', {
+                            {device.last_seen || device.last_checked_at
+                                ? new Date((device.last_seen || device.last_checked_at) as string).toLocaleTimeString('id-ID', {
                                       hour: '2-digit',
                                       minute: '2-digit',
                                       second: '2-digit',
