@@ -35,6 +35,7 @@ class Device extends Model
         'packet_loss',
         'cpu_usage',
         'memory_usage',
+        'temperature',
         'uptime',
         'pos_x',
         'pos_y',
@@ -71,6 +72,7 @@ class Device extends Model
             'packet_loss' => 'float',
             'cpu_usage' => 'float',
             'memory_usage' => 'float',
+            'temperature' => 'float',
             'uptime' => 'integer',
             'last_checked_at' => 'datetime',
         ];

@@ -115,6 +115,7 @@ class DeviceController extends Controller
 
         $device->load([
             'interfaces' => fn ($q) => $q->orderBy('if_index'),
+            'interfaces.latestMetric',
             'activeAlerts' => fn ($q) => $q->latest()->take(10),
             'outboundEdges.targetDevice',
             'inboundEdges.sourceDevice',

@@ -39,6 +39,75 @@ class NetworkInterface extends Model
         ];
     }
 
+    protected $appends = [
+        'if_name',
+        'if_descr',
+        'if_speed',
+        'if_admin_status',
+        'if_oper_status',
+        'if_in_errors',
+        'if_out_errors',
+        'if_in_octets',
+        'if_out_octets',
+        'in_utilization',
+        'out_utilization',
+    ];
+
+    public function getIfNameAttribute(): string
+    {
+        return $this->name;
+    }
+
+    public function getIfDescrAttribute(): ?string
+    {
+        return $this->description;
+    }
+
+    public function getIfSpeedAttribute(): int
+    {
+        return $this->speed ?? 0;
+    }
+
+    public function getIfAdminStatusAttribute(): string
+    {
+        return $this->admin_status ?? 'UNKNOWN';
+    }
+
+    public function getIfOperStatusAttribute(): string
+    {
+        return $this->oper_status ?? 'UNKNOWN';
+    }
+
+    public function getIfInErrorsAttribute(): int
+    {
+        return $this->in_errors ?? 0;
+    }
+
+    public function getIfOutErrorsAttribute(): int
+    {
+        return $this->out_errors ?? 0;
+    }
+
+    public function getIfInOctetsAttribute(): int
+    {
+        return $this->in_octets ?? 0;
+    }
+
+    public function getIfOutOctetsAttribute(): int
+    {
+        return $this->out_octets ?? 0;
+    }
+
+    public function getInUtilizationAttribute(): float
+    {
+        return (float) ($this->latestMetric?->utilization ?? 0.0);
+    }
+
+    public function getOutUtilizationAttribute(): float
+    {
+        return (float) ($this->latestMetric?->utilization ?? 0.0);
+    }
+
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class, 'device_id');
@@ -47,5 +116,10 @@ class NetworkInterface extends Model
     public function metrics(): HasMany
     {
         return $this->hasMany(InterfaceMetric::class, 'interface_id');
+    }
+
+    public function latestMetric()
+    {
+        return $this->hasOne(InterfaceMetric::class, 'interface_id')->latestOfMany();
     }
 }

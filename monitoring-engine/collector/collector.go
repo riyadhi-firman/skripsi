@@ -131,6 +131,7 @@ func (e *Engine) pollDevice(ctx context.Context, dev client.Device) client.Monit
 		res.Uptime = snmpData.UptimeSec
 		res.CPUUsage = snmpData.CPUUsage
 		res.MemoryUsage = snmpData.MemoryUsage
+		res.Temperature = snmpData.Temperature
 
 		if len(snmpData.Interfaces) > 0 {
 			if err := e.apiClient.SendInterfaceMetrics(dev.ID, snmpData.Interfaces); err != nil {
@@ -139,9 +140,10 @@ func (e *Engine) pollDevice(ctx context.Context, dev client.Device) client.Monit
 		}
 	}
 
-	log.Printf("[Worker] Device %d [%s] (%s) => %s (Latency: %v ms, Loss: %.1f%%)",
+	log.Printf("[Worker] Device %d [%s] (%s) => %s (Latency: %v ms, Loss: %.1f%%, Temp: %v C)",
 		dev.ID, dev.Name, dev.IPAddress, res.Status,
-		formatFloatPtr(res.Latency), res.PacketLoss)
+		formatFloatPtr(res.Latency), res.PacketLoss,
+		formatFloatPtr(res.Temperature))
 
 	return res
 }

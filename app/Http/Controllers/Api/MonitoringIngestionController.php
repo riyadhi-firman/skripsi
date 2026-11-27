@@ -93,6 +93,7 @@ class MonitoringIngestionController extends Controller
                 'jitter' => $valid['jitter'] ?? null,
                 'cpu_usage' => $valid['cpu_usage'] ?? null,
                 'memory_usage' => $valid['memory_usage'] ?? null,
+                'temperature' => $valid['temperature'] ?? null,
                 'uptime' => $valid['uptime'] ?? null,
                 'checked_at' => $checkedAt,
             ]);

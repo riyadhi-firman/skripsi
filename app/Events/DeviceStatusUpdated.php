@@ -30,6 +30,7 @@ class DeviceStatusUpdated implements ShouldBroadcastNow
             'packet_loss' => $packetLoss ?? $device->monitoringResults()->latest('checked_at')->first()?->packet_loss ?? 0,
             'cpu_usage' => $device->cpu_usage,
             'memory_usage' => $device->memory_usage,
+            'temperature' => $device->temperature,
             'uptime' => $device->uptime,
             'last_seen' => $device->last_seen?->toIso8601String(),
             'pos_x' => $device->pos_x,

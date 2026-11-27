@@ -17,6 +17,7 @@ type SnmpData struct {
 	UptimeSec   *int64
 	CPUUsage    *float64
 	MemoryUsage *float64
+	Temperature *float64
 	Interfaces  []client.InterfaceMetric
 	Success     bool
 	Error       error
@@ -226,7 +227,35 @@ func (p *Poller) Poll(device client.Device) *SnmpData {
 		data.MemoryUsage = &pct
 	}
 
-	// 4. Fetch Interfaces (ifTable .1.3.6.1.2.1.2.2.1)
+	// 4. Fetch Temperature (MikroTik / Cisco / Generic Sensor MIBs)
+	tempOids := []string{
+		".1.3.6.1.4.1.14988.1.1.3.11.0",     // MikroTik CPU Temp (tenths of C)
+		".1.3.6.1.4.1.14988.1.1.3.100.1.3.17", // MikroTik RouterOS 7 Health Table CPU Temp
+		".1.3.6.1.4.1.14988.1.1.3.10.0",     // MikroTik System Temp
+		".1.3.6.1.4.1.9.9.13.1.3.1.3.1",     // Cisco EnvMon Temp
+	}
+	if tempPkt, err := params.Get(tempOids); err == nil {
+		for _, v := range tempPkt.Variables {
+			raw := gosnmp.ToBigInt(v.Value).Int64()
+			if raw > 0 {
+				var temp float64
+				if raw > 10000 {
+					temp = float64(raw) / 1000.0
+				} else if raw > 150 {
+					temp = float64(raw) / 10.0
+				} else {
+					temp = float64(raw)
+				}
+				if temp >= 10.0 && temp <= 120.0 {
+					tempRounded := math.Round(temp*10) / 10
+					data.Temperature = &tempRounded
+					break
+				}
+			}
+		}
+	}
+
+	// 5. Fetch Interfaces (ifTable .1.3.6.1.2.1.2.2.1)
 	ifaces := make(map[int]*client.InterfaceMetric)
 	_ = params.Walk(".1.3.6.1.2.1.2.2.1", func(pdu gosnmp.SnmpPDU) error {
 		parts := strings.Split(pdu.Name, ".")

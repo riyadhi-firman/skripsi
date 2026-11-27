@@ -434,46 +434,61 @@ export default function Show({ device, monitoringHistory, canManage }: Props) {
                                         </td>
                                     </tr>
                                 ) : (
-                                    device.interfaces.map((iface) => (
-                                        <tr key={iface.id} className="hover:bg-slate-800/30">
-                                            <td className="py-3 px-4 text-slate-400">#{iface.if_index}</td>
-                                            <td className="py-3 px-4 font-bold text-slate-200">{iface.if_name}</td>
-                                            <td className="py-3 px-4 text-slate-400 font-sans text-[11px]">{iface.if_descr || '-'}</td>
-                                            <td className="py-3 px-4 text-slate-300">
-                                                {iface.if_speed >= 1000000000
-                                                    ? `${iface.if_speed / 1000000000} Gbps`
-                                                    : iface.if_speed >= 1000000
-                                                    ? `${iface.if_speed / 1000000} Mbps`
-                                                    : `${iface.if_speed} bps`}
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold ${
-                                                    iface.if_admin_status === 'UP' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
-                                                }`}>
-                                                    {iface.if_admin_status}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold ${
-                                                    iface.if_oper_status === 'UP' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
-                                                }`}>
-                                                    {iface.if_oper_status}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-cyan-400">↓ {iface.in_utilization}%</span>
-                                                    <span className="text-slate-600">/</span>
-                                                    <span className="text-indigo-400">↑ {iface.out_utilization}%</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <span className={`${iface.if_in_errors + iface.if_out_errors > 0 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
-                                                    {iface.if_in_errors + iface.if_out_errors}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    device.interfaces.map((iface) => {
+                                        const name = (iface as any).name || iface.if_name || `eth${iface.if_index}`;
+                                        const descr = (iface as any).description || iface.if_descr || '-';
+                                        const speed = Number((iface as any).speed ?? iface.if_speed ?? 0);
+                                        const adminStatus = (iface as any).admin_status || iface.if_admin_status || 'UNKNOWN';
+                                        const operStatus = (iface as any).oper_status || iface.if_oper_status || 'UNKNOWN';
+                                        const inUtil = Number(iface.in_utilization ?? 0);
+                                        const outUtil = Number(iface.out_utilization ?? 0);
+                                        const inErrors = Number((iface as any).in_errors ?? iface.if_in_errors ?? 0);
+                                        const outErrors = Number((iface as any).out_errors ?? iface.if_out_errors ?? 0);
+                                        const totalErrors = inErrors + outErrors;
+
+                                        return (
+                                            <tr key={iface.id} className="hover:bg-slate-800/30">
+                                                <td className="py-3 px-4 text-slate-400">#{iface.if_index}</td>
+                                                <td className="py-3 px-4 font-bold text-slate-200">{name}</td>
+                                                <td className="py-3 px-4 text-slate-400 font-sans text-[11px]">{descr}</td>
+                                                <td className="py-3 px-4 text-slate-300">
+                                                    {speed >= 1000000000
+                                                        ? `${(speed / 1000000000).toFixed(0)} Gbps`
+                                                        : speed >= 1000000
+                                                        ? `${(speed / 1000000).toFixed(0)} Mbps`
+                                                        : speed > 0
+                                                        ? `${speed} bps`
+                                                        : '-'}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold ${
+                                                        adminStatus === 'UP' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                                                    }`}>
+                                                        {adminStatus}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold ${
+                                                        operStatus === 'UP' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'
+                                                    }`}>
+                                                        {operStatus}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-cyan-400">↓ {inUtil.toFixed(1)}%</span>
+                                                        <span className="text-slate-600">/</span>
+                                                        <span className="text-indigo-400">↑ {outUtil.toFixed(1)}%</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`${totalErrors > 0 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                                                        {totalErrors}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
