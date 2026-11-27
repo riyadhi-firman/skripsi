@@ -100,7 +100,9 @@ class MonitoringIngestionController extends Controller
             // 2. Update device status and latest metrics
             $deviceUpdate = [
                 'status' => $valid['status'],
-                'last_seen' => $valid['status'] !== 'DOWN' ? $checkedAt : $device->last_seen,
+                'latency' => $valid['latency'] ?? null,
+                'packet_loss' => (float) ($valid['packet_loss'] ?? 0.0),
+                'last_checked_at' => $checkedAt,
             ];
 
             if (isset($valid['uptime']) && $valid['uptime'] !== null) {

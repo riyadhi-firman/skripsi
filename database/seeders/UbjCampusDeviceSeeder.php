@@ -15,7 +15,6 @@ class UbjCampusDeviceSeeder extends Seeder
         Artisan::call('ubj:import-devices', [
             '--replace' => true,
             '--with-topology' => true,
-            '--with-metrics' => true,
         ]);
     }
 }

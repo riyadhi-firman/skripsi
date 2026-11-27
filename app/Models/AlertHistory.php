@@ -30,6 +30,21 @@ class AlertHistory extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (AlertHistory $history) {
+            if (empty($history->description) && !empty($history->notes)) {
+                $history->description = $history->notes;
+            }
+            if (empty($history->notes) && !empty($history->description)) {
+                $history->notes = $history->description;
+            }
+            if (empty($history->created_at)) {
+                $history->created_at = now();
+            }
+        });
+    }
+
     public function alert(): BelongsTo
     {
         return $this->belongsTo(Alert::class, 'alert_id');

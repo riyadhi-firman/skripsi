@@ -116,9 +116,20 @@ class AlertService
             return $existing;
         }
 
+        $title = match ($type) {
+            'DEVICE_DOWN' => "Perangkat {$device->name} Tidak Merespons",
+            'HIGH_LATENCY' => "Latensi Tinggi Terdeteksi pada {$device->name}",
+            'PACKET_LOSS' => "Packet Loss Tinggi pada {$device->name}",
+            'HIGH_CPU' => "Beban CPU Tinggi pada {$device->name}",
+            'HIGH_MEMORY' => "Penggunaan Memori Tinggi pada {$device->name}",
+            default => "Peringatan {$type} pada {$device->name}",
+        };
+
         $alert = Alert::create([
             'device_id' => $device->id,
             'alert_type' => $type,
+            'type' => $type,
+            'title' => $title,
             'severity' => $severity,
             'message' => $message,
             'status' => Alert::STATUS_OPEN,
@@ -129,6 +140,7 @@ class AlertService
             'alert_id' => $alert->id,
             'action' => 'TRIGGERED',
             'notes' => $message,
+            'description' => $message,
         ]);
 
         // Broadcast real-time alert via Reverb

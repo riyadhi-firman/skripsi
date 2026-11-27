@@ -93,15 +93,15 @@ class ImportUbjDevicesCommand extends Command
                         'timeout' => (int) ($row['timeout'] ?? 5),
                         'retry' => (int) ($row['retry'] ?? 2),
                         'monitoring_enabled' => true,
-                        'status' => $row['status'] ?? 'ONLINE',
-                        'latency' => rand(15, 85) / 10,
+                        'status' => 'UNKNOWN',
+                        'latency' => null,
                         'packet_loss' => 0.0,
-                        'cpu_usage' => rand(18, 48),
-                        'memory_usage' => rand(32, 64),
-                        'uptime' => rand(300000, 3500000),
+                        'cpu_usage' => null,
+                        'memory_usage' => null,
+                        'uptime' => null,
                         'pos_x' => isset($row['pos_x']) ? (int) $row['pos_x'] : null,
                         'pos_y' => isset($row['pos_y']) ? (int) $row['pos_y'] : null,
-                        'last_checked_at' => Carbon::now(),
+                        'last_checked_at' => null,
                     ]
                 );
                 $imported[$device->name] = $device;
@@ -114,8 +114,8 @@ class ImportUbjDevicesCommand extends Command
                 $this->buildCampusTopology($imported);
             }
 
-            // Historical Metrics for 24h charts
-            if ($this->option('with-metrics') || $this->option('replace')) {
+            // Historical Metrics for 24h charts (only if explicitly requested)
+            if ($this->option('with-metrics')) {
                 $this->info("Menghasilkan metrik telemetri 24 jam untuk chart NOC...");
                 $this->generateHistoricalMetrics(array_values($imported));
             }

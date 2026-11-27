@@ -40,6 +40,21 @@ class Alert extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Alert $alert) {
+            if (empty($alert->title)) {
+                $alert->title = ($alert->alert_type ?? $alert->type ?? 'Peringatan') . ' pada ' . ($alert->device?->name ?? 'Perangkat #' . $alert->device_id);
+            }
+            if (empty($alert->type)) {
+                $alert->type = $alert->alert_type ?? 'DEVICE_DOWN';
+            }
+            if (empty($alert->alert_type)) {
+                $alert->alert_type = $alert->type ?? 'DEVICE_DOWN';
+            }
+        });
+    }
+
     public function setAlertTypeAttribute($value): void
     {
         $this->attributes['alert_type'] = $value;
