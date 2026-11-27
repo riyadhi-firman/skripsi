@@ -71,6 +71,9 @@ class MonitoringIngestionController extends Controller
                 'memory_usage' => 'nullable|numeric',
                 'temperature' => 'nullable|numeric',
                 'uptime' => 'nullable|integer',
+                'sys_descr' => 'nullable|string',
+                'sys_object_id' => 'nullable|string',
+                'firmware_version' => 'nullable|string',
                 'checked_at' => 'nullable|date',
             ]);
 

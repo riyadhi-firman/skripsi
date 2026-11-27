@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -132,6 +133,22 @@ func (e *Engine) pollDevice(ctx context.Context, dev client.Device) client.Monit
 		res.CPUUsage = snmpData.CPUUsage
 		res.MemoryUsage = snmpData.MemoryUsage
 		res.Temperature = snmpData.Temperature
+
+		if snmpData.SysDescr != nil {
+			descr := *snmpData.SysDescr
+			fields := strings.Fields(descr)
+			for i := len(fields) - 1; i >= 0; i-- {
+				cleaned := strings.Trim(fields[i], "()")
+				if strings.Contains(cleaned, ".") {
+					res.FirmwareVersion = &cleaned
+					break
+				}
+			}
+			if res.FirmwareVersion == nil && len(fields) > 0 {
+				last := strings.Trim(fields[len(fields)-1], "()")
+				res.FirmwareVersion = &last
+			}
+		}
 
 		if len(snmpData.Interfaces) > 0 {
 			if err := e.apiClient.SendInterfaceMetrics(dev.ID, snmpData.Interfaces); err != nil {
