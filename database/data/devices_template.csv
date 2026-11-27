@@ -1,0 +1,17 @@
+name,hostname,ip_address,device_type,vendor,model,location,snmp_version,snmp_community,snmp_port,monitoring_interval,timeout,retry,pos_x,pos_y
+UBJ-FW-FortiGate-100F,fw01.ubj.ac.id,192.168.10.2,Firewall,Fortinet,FortiGate 100F,Data Center Gedung A Lantai 1 (Kampus 2 Curug),v2c,ubj_snmp_community,161,30,5,2,600,50
+UBJ-GW-Core-CCR1036,cr01.curug.ubj.ac.id,192.168.10.1,Router,MikroTik,CCR1036-8G-2S+,Data Center Gedung A Lantai 1 (Kampus 2 Curug),v2c,ubj_snmp_community,161,30,5,2,450,200
+UBJ-GW-Ciwaru-CCR1009,gw01.ciwaru.ubj.ac.id,192.168.50.1,Router,MikroTik,CCR1009-7G-1C-1S+,Ruang Jaringan Lt. 1 (Kampus 1 Ciwaru),v2c,ubj_snmp_community,161,30,5,2,850,200
+UBJ-CS-Core-Catalyst3850,cs01.curug.ubj.ac.id,192.168.10.10,Switch,Cisco,Catalyst 3850-48P-L,Data Center Gedung A Lantai 1 (Kampus 2 Curug),v2c,ubj_snmp_community,161,30,5,2,450,380
+UBJ-SW-Distribusi-Ciwaru,ds01.ciwaru.ubj.ac.id,192.168.50.10,Switch,Cisco,Catalyst 2960-24TT-L,Ruang Server Lt. 2 (Kampus 1 Ciwaru),v2c,ubj_snmp_community,161,30,5,2,850,380
+UBJ-DS-GedungA-Rektorat,ds01.curug.ubj.ac.id,192.168.10.20,Switch,Ruijie,RG-S2910-24GT4SFP-P-E,Ruang Server Rektorat Gedung A Lt. 2,v2c,ubj_snmp_community,161,30,5,2,180,540
+UBJ-DS-GedungB-FTI,ds02.curug.ubj.ac.id,192.168.20.1,Switch,Ruijie,RG-S2910-24GT4SFP-P-E,Ruang Server FTI Gedung B Lt. 2,v2c,ubj_snmp_community,161,30,5,2,420,540
+UBJ-DS-GedungC-FEB-FKIP,ds03.curug.ubj.ac.id,192.168.30.1,Switch,Ruijie,RG-S2910-24GT4SFP-P-E,Ruang Server Gedung C Lt. 2,v2c,ubj_snmp_community,161,30,5,2,660,540
+UBJ-AP-Rektorat-Lobby,ap-rektorat.curug.ubj.ac.id,192.168.10.51,Access Point,Ubiquiti,UniFi U6 Pro,Gedung Rektorat Lantai 1 (Lobby),v2c,ubj_snmp_community,161,30,5,2,120,720
+UBJ-AP-Perpustakaan-Lt2,ap-perpus.curug.ubj.ac.id,192.168.10.52,Access Point,Ubiquiti,UniFi U6 Pro,Perpustakaan Pusat Gedung A Lantai 2,v2c,ubj_snmp_community,161,30,5,2,260,720
+UBJ-AP-Lab-Komputer-FTI,ap-labfti.curug.ubj.ac.id,192.168.20.50,Access Point,Ubiquiti,UniFi U6-LR,Lab Komputer Terpadu Gedung B Lantai 3,v2c,ubj_snmp_community,161,30,5,2,420,720
+UBJ-AP-GedungC-Auditorium,ap-audit.curug.ubj.ac.id,192.168.30.50,Access Point,Ubiquiti,UniFi U6 Pro,Auditorium & Ruang Kuliah Gedung C Lantai 3,v2c,ubj_snmp_community,161,30,5,2,660,720
+UBJ-AP-Ciwaru-Lobby,ap01.ciwaru.ubj.ac.id,192.168.50.50,Access Point,Ubiquiti,UniFi U6 Lite,Lobby & Ruang Kuliah Kampus 1 Ciwaru Lantai 1,v2c,ubj_snmp_community,161,30,5,2,850,540
+UBJ-SRV-SIAKAD,siakad.ubj.ac.id,192.168.10.100,Server,Dell,PowerEdge R640,Data Center Gedung A Lantai 1 (Curug),v2c,ubj_snmp_community,161,30,5,2,100,380
+UBJ-SRV-Elearning-LMS,elearning.ubj.ac.id,192.168.10.101,Server,Dell,PowerEdge R640,Data Center Gedung A Lantai 1 (Curug),v2c,ubj_snmp_community,161,30,5,2,100,240
+UBJ-SRV-Web-Portal,portal.ubj.ac.id,192.168.10.102,Server,HPE,ProLiant DL360 Gen10,Data Center Gedung A Lantai 1 (Curug),v2c,ubj_snmp_community,161,30,5,2,100,100
